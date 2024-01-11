@@ -1,6 +1,6 @@
 #---
-setwd("/Users/connordavis/Desktop/projects/schubert/")
-schubert_data <- read.csv("schubert_info3.csv", header=T)
+setwd("/Users/connordavis/Documents/GitHub/schubertWellness/")
+schubert_data <- read.csv("schubertData.csv", header=T)
 library(tidyverse)
 library(GGally)
 library(effects) #for plotting parameter effects

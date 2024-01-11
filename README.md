@@ -4,7 +4,7 @@ This is a part of a larger project that employs corpus methods to examine the ro
 
 Daniel Shanahan is a co-author on this project.
 
-#organization
+# organization
 
 -The Quarto schubertWellness.qmd has been exported as a pdf and html for convenience
 -the code is all in schubertWellness.r 

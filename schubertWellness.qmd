@@ -1,8 +1,11 @@
 ---
 title: "Schubert: Disability and Late Style"
+Authors: 
+  - Connor Davis 
+  - Daniel Shanahan
 format: pdf
 editor: visual
-abstract: This is a part of a larger project that employs corpus methods to examine the role of variability as a predictor of a composer's state of health. The specific focus of this study is the effect of syphilis—broadly defined as unwellness—on Franz Schubert’s musical output. Measures of scale-degree, interval, and rhythmic variability, are used utilized a binomial logistic regression. Two musical features were significant (P<.01) at predicting the episodes of unwellness in the composer’s output, highlighting the link between biographical events and artistic output. 
+abstract: This is a part of a larger project that employs corpus methods to examine the role of variability as a predictor of a composer's state of health. The specific focus of this study is the effect of syphilis—broadly defined as unwellness—on Franz Schubert’s musical output. Measures of scale-degree, interval, and rhythmic variability, are used utilized a binomial logistic regression. Two musical features were significant (P<.01) at predicting the episodes of unwellness in the composer’s output, highlighting the link between biographical events and artistic output.
 ---
 
 # Preparation
@@ -10,8 +13,8 @@ abstract: This is a part of a larger project that employs corpus methods to exam
 ## Directories and Libraries
 
 ```{r}
-setwd("/Users/connordavis/Desktop/gitHub/schubertWellness/")
-schubert_data <- read.csv("schubert_info3.csv", header=T)
+setwd("/Users/connordavis/Documents/GitHub/schubertWellness/")
+schubert_data <- read.csv("schubertData.csv", header=T)
 library(tidyverse)
 library(GGally)
 library(effects)
