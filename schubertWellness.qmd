@@ -1,0 +1,134 @@
+---
+title: "Schubert: Disability and Late Style"
+format: pdf
+editor: visual
+abstract: This is a part of a larger project that employs corpus methods to examine the role of variability as a predictor of a composer's state of health. The specific focus of this study is the effect of syphilis—broadly defined as unwellness—on Franz Schubert’s musical output. Measures of scale-degree, interval, and rhythmic variability, are used utilized a binomial logistic regression. Two musical features were significant (P<.01) at predicting the episodes of unwellness in the composer’s output, highlighting the link between biographical events and artistic output. 
+---
+
+# Preparation
+
+## Directories and Libraries
+
+```{r}
+setwd("/Users/connordavis/Desktop/gitHub/schubertWellness/")
+schubert_data <- read.csv("schubert_info3.csv", header=T)
+library(tidyverse)
+library(GGally)
+library(effects)
+set.seed(529)
+```
+
+## Cleaning
+
+This data set contains musical features from the Schubert melodies throughout his lifetime, along with information pertaining to his wellness/unwellness. Variables include:
+
+-   filename - name of the file from the RISM dataset <https://rism.digital/>
+
+-   deutsche_num - these are the cataloging numbers for Schubert's works
+
+-   degree_entropy - a measure of variability in melodic scale degree usage.
+
+-   intervallic_entropy - a measure of variability in the note-to-note intervalic distances
+
+-   npvi - normalized pairwise variability index. This measure of rhythmic variance.
+
+-   start_date - the month the composition process began. We have this information because of diaries and letters.
+
+-   completion_date - the month the work was complete. We have this information because of diaries and letters.
+
+-   wellness - a binary variable of well/unwell. We have this information because of diaries and letters.
+
+-   NOTES..to.be.deleted - residual information leftover from compiling the data and biographical events.
+
+```{r}
+str(schubert_data)
+
+schubertDataClean <- schubert_data %>% 
+  filter(!str_detect(wellness, "uncertain")) %>% #get rid of pieces we aren't certain about his health
+  select(-NOTES..to.be.deleted., #remove unecessary columns
+         -completion_date,
+         -deutsche_num,
+         -filename) %>% 
+  filter(!str_detect(start_date, "UNKNOWN")) %>% #remove unknowns from the dates
+  drop_na() #drop nas
+
+schubertDataClean$wellness <- if_else(schubertDataClean$wellness == "well", 1, 0) #change "unwell" to 0 and "well" to 1 for binomial analysis
+schubertDataClean$start_date <- as.integer(schubertDataClean$start_date) #convert dates to integers to help with plotting
+
+str(schubertDataClean) #resulting data structures
+```
+
+# Exploring
+
+I use ggpairs() to check for normality and any correlations that might be useful. Variable "degree_entropy" and "intervallic_entropy" are correlated.
+
+```{r}
+schubertDataClean %>% #looks like normal disctributions and degree_entropy and intervallic_entropy are  correlated.
+  select(degree_entropy, intervallic_entropy, npvi, wellness) %>% 
+  ggpairs() 
+```
+
+# Testing Our Variables
+
+I utilized all of the measures of variability in this example to see which ones are significant in the model. Only "degree_entropy" and "npvi" are significant in the model (p \< .05 and p \< .01, respectively).
+
+Since we have 2 significant variables, I created the model "glmSchubert" to calculate whether or not "intervallic_entropy" strengthened the model or not.It does not strengthen the model, as shown by the significant ratings of the anova() function and the lower Akaike's Information Criteria (AIC) for "glmSchubert"
+
+```{r}
+glmTest <- glm(formula = wellness ~ degree_entropy + 
+                 intervallic_entropy + 
+                 npvi,
+               data = schubertDataClean, 
+               family = binomial(link = "logit"))
+
+summary(glmTest) #npvi and degree_entropy are significant at predicting wellness
+
+plot(allEffects(glmTest)) ##to visualize the effect we can see the positive and negative influences of our two significant variables
+```
+
+# Testing the Fit and Evaluating Parameters
+
+Since we have 2 significant variables, I created the model "glmSchubert" to calculate whether or not "intervallic_entropy" strengthened the model or not.
+
+It does not strengthen the model, as shown by the significant ratings of the anova() function and the lower Akaike's Information Criteria (AIC) for "glmSchubert". Notice in the ANOVA that I also have a significant chi-squared (p , .01), which is appropriate for a binomial glm since this indicates it is a useful model.
+
+```{r}
+glmSchubert <- glm(formula = wellness ~ degree_entropy + #npvi and degree_entropy are significant
+                               intervallic_entropy,
+                             data = schubertDataClean, 
+                             family = binomial(link = "logit"))
+
+summary(glmSchubert)
+
+anova(glmTest, glmSchubert, test ="Chisq") #evaluating test against model without npvi. Model without npvi is better, so we will proceed with that.
+
+glmTest$aic
+glmSchubert$aic #just to further check, and glmSchubert is definitely better.
+
+```
+
+# An Elbow
+
+Since these two variables "degree_entropy" and "npvi" are predictors of wellness, we can conclude that musical output does indeed change with a composer's health. This interacts with various ideas of historical hypothoses pertaining to composers "predicting" their own deaths. In reality, this, at least in the case of Schubert, may be better understood as a decline in health which results in a change in style. Interestingly enough, the result is increased variability and disorder in Schubert's compositions as he ages.
+
+The two graphs below capture one picture of this. Not the change in direction with the second onset of illness: this is the date when Schubert developed syphilis. It's particularly present in "npvi", the measure of rhythmic variability in his music.
+
+```{r}
+ggplot(schubertDataClean, aes(start_date, degree_entropy, wellness)) +
+  geom_rect(aes(NULL, NULL,
+                xmin=start_date - .5 , xmax=start_date +.5,
+                ymin=min(degree_entropy), ymax=max(degree_entropy),
+                fill=wellness
+                )) +
+    geom_point() + 
+    geom_smooth()
+
+ggplot(schubertDataClean, aes(start_date, npvi, wellness)) +
+  geom_rect(aes(NULL, NULL,
+                xmin=start_date - .5 ,xmax=start_date +.5,
+                ymin=min(npvi), ymax=max(npvi),
+                fill=wellness)) +
+  geom_point() + 
+  geom_smooth()
+
+```
